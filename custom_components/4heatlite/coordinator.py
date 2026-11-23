@@ -7,7 +7,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import FourHeatLiteApi
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MAX_STALE_POLLS, PROXY_POLL_INTERVAL
+from .const import (
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    FAN_POLL_EVERY,
+    MAX_STALE_POLLS,
+    PROXY_POLL_INTERVAL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,6 +24,8 @@ class FourHeatLiteCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, host: str) -> None:
         self.api = FourHeatLiteApi(host)
         self._failed_polls = 0
+        self._fans: dict = {}
+        self._fan_polls_left = 0
         super().__init__(
             hass,
             _LOGGER,
@@ -37,6 +45,9 @@ class FourHeatLiteCoordinator(DataUpdateCoordinator):
             merged.update(data)
         else:
             merged = data
+        # a written fan level must survive the polls that skip the fans
+        for key in self._fans.keys() & data.keys():
+            self._fans[key] = data[key]
         self.async_set_updated_data(merged)
 
     def apply_echo(self, response: list | None) -> bool:
@@ -74,8 +85,11 @@ class FourHeatLiteCoordinator(DataUpdateCoordinator):
         self._failed_polls = 0
         if config:
             data.update(config)
-        fans = await self.hass.async_add_executor_job(self.api.query_fans)
-        data.update(fans)
+        if self._fan_polls_left <= 0 or not self._fans:
+            self._fans = await self.hass.async_add_executor_job(self.api.query_fans)
+            self._fan_polls_left = FAN_POLL_EVERY
+        self._fan_polls_left -= 1
+        data.update(self._fans)
         fan_setting = await self.hass.async_add_executor_job(self.api.query_fan_setting)
         data.update(fan_setting)
         return data

@@ -32,7 +32,12 @@ MAX_STALE_POLLS = 2
 # Target register max at or below this = whole-degree stove (10-40 vs 100-400)
 WHOLE_DEGREE_MAX_RAW = 100
 
-DEFAULT_SCAN_INTERVAL = 30
+# The module takes one connection at a time and its local server has hung
+# (pings fine, port 80 refused until power-cycled): poll gently
+DEFAULT_SCAN_INTERVAL = 60
+# Fan levels hardly ever change and cost a connection each: read them
+# every this many polls
+FAN_POLL_EVERY = 10
 
 STATE_NAMES = {
     0: "OFF",
