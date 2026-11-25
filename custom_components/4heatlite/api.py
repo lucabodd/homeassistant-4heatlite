@@ -234,12 +234,15 @@ class FourHeatLiteApi:
     def _decode_0310(hexdata: str, temp_divisor: int = 10) -> dict:
         """Decode the 0310 sensor response (19 bytes / 38 hex chars).
 
-        Confirmed register map (Lasian Eriste air stove):
+        Register map (Lasian Eriste air stove, error byte checked on a Ferlux Iris):
           Byte  0: header (0x10)
-          Byte  1: error code (0=none)
+          Byte  1: flags, not the alarm: 0x01 during Check Up and Extinguishing,
+                   0x20 with an alarm (0x21 at the alarm itself)
           Byte  2: on/off flag (0=off, 1=on)
           Byte  4: exhaust temperature (°C, 1 byte; always 0 on Jollymec)
           Byte  5: operating state (0=OFF, 5=Run, 6=Modulation, etc.)
+          Byte  6: alarm code as the panel shows it, ErNN (0=none): 17 with the
+                   panel on Er17, while byte 1 read 32
           Bytes 10-11: room temperature (big-endian, 0.1°C or whole °C)
         """
         vals = [int(hexdata[i : i + 2], 16) for i in range(0, len(hexdata), 2)]
@@ -247,7 +250,8 @@ class FourHeatLiteApi:
 
         return {
             "state": vals[5],
-            "error": vals[1],
+            "error": vals[6],
+            "flags": vals[1],
             "on_off": vals[2],
             "exhaust_temp": vals[4],
             "room_temp": room_raw / temp_divisor,
