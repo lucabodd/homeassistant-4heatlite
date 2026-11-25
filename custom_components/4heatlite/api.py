@@ -12,12 +12,14 @@ from .const import (
     DAY_OFFSETS,
     FAN_REGISTERS,
     MINUTES_PER_DAY,
+    QUERY_AIRFLOW,
     QUERY_CONFIG,
     QUERY_EXHAUST,
     QUERY_RETRIES,
     QUERY_RETRY_DELAY,
     QUERY_SCHEDULE,
     QUERY_SENSORS,
+    REGISTER_AIRFLOW,
     REGISTER_EXHAUST,
     REGISTER_POWER,
     REGISTER_SENSORS,
@@ -163,6 +165,9 @@ class FourHeatLiteApi:
         hexdata = self._query(QUERY_EXHAUST, min_hex_len=18, register=REGISTER_EXHAUST)
         if hexdata:
             data["exhaust_temp"] = self._decode_register(hexdata)[0]
+        hexdata = self._query(QUERY_AIRFLOW, min_hex_len=18, register=REGISTER_AIRFLOW)
+        if hexdata:
+            data["airflow"] = self._decode_register(hexdata)[0]
         return data
 
     def query_config(self) -> dict | None:

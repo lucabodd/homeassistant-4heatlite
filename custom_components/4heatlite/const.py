@@ -15,6 +15,10 @@ QUERY_CONFIG = {
 QUERY_EXHAUST = '["2WC","1","0312ffff"]'
 REGISTER_SENSORS = "10"
 REGISTER_EXHAUST = "12ffff"
+# Primary air flow, «FL» in the panel's info menu: the board holds it with the
+# flue fan and raises Er17/Er41/Er42 when it cannot (Ferlux Iris)
+QUERY_AIRFLOW = '["2WC","1","0312ffed"]'
+REGISTER_AIRFLOW = "12ffed"
 # Fan levels the 4HEAT filemap declares, polled over TCP: data key -> 0e register.
 # On a Ferlux the panel's fan setting is not among them (see CONF_FAN_REGISTER).
 FAN_REGISTERS = {
